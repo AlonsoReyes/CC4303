@@ -35,7 +35,6 @@ void *bwss_connect(void *ptr);
 int DreadUDP(int cl, char *buf, int l) {
 	int cnt, pos;
 	int size = l;
-	fprintf(stderr, "DreadUDP: %d bytes\n", size);
     pos = 0;
     while(size > 0) {
         cnt = read(cl, buf+pos, size);
@@ -43,7 +42,7 @@ int DreadUDP(int cl, char *buf, int l) {
     size -= cnt;
     pos += cnt;
     }
-
+    fprintf(stderr, "DreadUDP: %d bytes\n", pos);
     return pos;
 }
 
@@ -55,7 +54,7 @@ void DwriteUDP(int cl, char *buf, int l) {
 	        exit(1);
 	    }
     }
-	fprintf(stderr, "DwriteUDP L: %d bytes \n", l);
+	fprintf(stderr, "DwriteUDP: %d bytes \n", l);
 }
 
 
@@ -83,28 +82,25 @@ int main(int argc, char **argv) {
 
 void *bwss_connect(void *ptr) {
 	int bytes, cnt;
+
 	if((bwss_socket = j_socket_udp_connect((char *)ptr, bwss_port)) < 0) {
 		printf("udp connect failed\n");
        	exit(1);
 	}
 
-	pthread_mutex_lock(&mutex);
+	
 	for(bytes=0;; bytes+=cnt) {
+		cnt = DreadUDP(bwss_socket, bwc_buffer, BUFFER_LENGTH);
+		Dwrite(bwc_socket, bwc_buffer, cnt);
 		
-		while(!ready){
-			pthread_cond_wait(&cond,&mutex);
-		}
-		
-        cnt = DreadUDP(bwss_socket, bwc_buffer, BUFFER_LENGTH);
-
         if(cnt <= 0) break;
-        Dwrite(bwc_socket, bwc_buffer, cnt);
     }
-	Dwrite(bwc_socket, bwc_buffer, 0);
-	ready = 0;
+
+    pthread_mutex_lock(&mutex);
+	ready = 1;
+	Dclose(bwss_socket);
 	pthread_cond_broadcast(&cond);
 	pthread_mutex_unlock(&mutex);
-
 	return NULL;
 }
 
@@ -119,23 +115,22 @@ void* connect_client(void *pcl){
 	bwc_socket = *((int *)pcl);
 
     free(pcl);
-    pthread_mutex_lock(&mutex);
 	for(bytes=0;; bytes+=cnt) {
-		if (first) {
-			Dwrite(bwss_socket, bwss_buffer, 0);
+		if(first) {
+			DwriteUDP(bwss_socket, bwss_buffer, 0);
 			first = 0;
 		}
         cnt = Dread(bwc_socket, bwss_buffer, BUFFER_LENGTH);
         DwriteUDP(bwss_socket, bwss_buffer, cnt);
         if(cnt <= 0) break;
 	}
-	Dwrite(bwss_socket, bwss_buffer, 0);
-	ready = 1;
-	pthread_cond_broadcast(&cond);
-	while(ready){
-		pthread_cond_wait(&cond,&mutex);
-	}
-	pthread_mutex_unlock(&mutex);
 
+	Dwrite(bwss_socket, bwss_buffer, 0);
+
+	pthread_mutex_lock(&mutex);
+	while(!ready)
+		pthread_cond_wait(&cond, &mutex);
+	Dclose(bwc_socket);
+	pthread_mutex_unlock(&mutex);
 	return NULL;
 }
