@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <signal.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
@@ -27,7 +27,7 @@ int ready;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
 
-void* connect_client(void *pcl);
+void *connect_client(void *pcl);
 void *bwc_connect(void * ptr); 
 void *bwss_connect(void *ptr);
 
@@ -36,11 +36,16 @@ int DreadUDP(int cl, char *buf, int l) {
 	int cnt, pos;
 	int size = l;
     pos = 0;
+    //fprintf(stderr, "%s\n", buf);
     while(size > 0) {
+    fprintf(stderr, "READDDDDDDDDDDDDDDD %d\n",pos);
         cnt = read(cl, buf+pos, size);
-    if(cnt <= 0) return cnt;
-    size -= cnt;
-    pos += cnt;
+    fprintf(stderr, "cnt %d\n", cnt);
+	    if(cnt <= 0) {
+	    	break;
+	    }
+	    size -= cnt;
+	    pos += cnt;
     }
     fprintf(stderr, "DreadUDP: %d bytes\n", pos);
     return pos;
@@ -76,8 +81,11 @@ int main(int argc, char **argv) {
 
     pthread_create(&bwc_thread, NULL, bwc_connect, (void *)bwc_port);  
     pthread_create(&bwss_thread, NULL, bwss_connect, (void *)bwss_server);
-    pthread_join(bwss_thread, NULL);
     pthread_join(bwc_thread, NULL);
+    fprintf(stderr, "POST 1 JOIN\n");
+    pthread_join(bwss_thread, NULL);
+    fprintf(stderr, "JOINS\n");
+    return 0;
 }
 
 void *bwss_connect(void *ptr) {
@@ -88,19 +96,32 @@ void *bwss_connect(void *ptr) {
        	exit(1);
 	}
 
-	
+	fprintf(stderr, "AQUI\n");
 	for(bytes=0;; bytes+=cnt) {
-		cnt = DreadUDP(bwss_socket, bwc_buffer, BUFFER_LENGTH);
-		Dwrite(bwc_socket, bwc_buffer, cnt);
-		
-        if(cnt <= 0) break;
+		//cnt = DreadUDP(bwss_socket, bwc_buffer, BUFFER_LENGTH);
+		int size = BUFFER_LENGTH;
+		int pos = 0;
+        while(size > 0) {
+	        cnt = read(bwss_socket, bwc_buffer+pos, size);
+	    	fprintf(stderr, "DreadUDP: %d bytes\n", cnt);
+		    if(cnt <= 0) {
+		    	break;
+		    }
+			Dwrite(bwc_socket+pos, bwc_buffer, cnt);
+		    size -= cnt;
+		    pos += cnt;
+	    }
+	    if(cnt <= 0) break;
+	    //Dwrite(bwc_socket+pos, bwc_buffer, cnt);
     }
+    Dwrite(bwc_socket, bwc_buffer, 0);
 
     pthread_mutex_lock(&mutex);
 	ready = 1;
 	Dclose(bwss_socket);
 	pthread_cond_broadcast(&cond);
 	pthread_mutex_unlock(&mutex);
+	fprintf(stderr, "SOCKET UDP CERRADO\n");
 	return NULL;
 }
 
@@ -115,22 +136,24 @@ void* connect_client(void *pcl){
 	bwc_socket = *((int *)pcl);
 
     free(pcl);
+    fprintf(stderr, "ENTRE\n");
 	for(bytes=0;; bytes+=cnt) {
 		if(first) {
 			DwriteUDP(bwss_socket, bwss_buffer, 0);
 			first = 0;
 		}
         cnt = Dread(bwc_socket, bwss_buffer, BUFFER_LENGTH);
-        DwriteUDP(bwss_socket, bwss_buffer, cnt);
         if(cnt <= 0) break;
+        DwriteUDP(bwss_socket, bwss_buffer, cnt);
 	}
 
-	Dwrite(bwss_socket, bwss_buffer, 0);
+	DwriteUDP(bwss_socket, bwss_buffer, 0);
 
 	pthread_mutex_lock(&mutex);
 	while(!ready)
 		pthread_cond_wait(&cond, &mutex);
 	Dclose(bwc_socket);
 	pthread_mutex_unlock(&mutex);
+	fprintf(stderr, "SOCKET TCP CERRADO\n");
 	return NULL;
 }
