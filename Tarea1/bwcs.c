@@ -38,9 +38,7 @@ int DreadUDP(int cl, char *buf, int l) {
     pos = 0;
     //fprintf(stderr, "%s\n", buf);
     while(size > 0) {
-    fprintf(stderr, "READDDDDDDDDDDDDDDD %d\n",pos);
         cnt = read(cl, buf+pos, size);
-    fprintf(stderr, "cnt %d\n", cnt);
 	    if(cnt <= 0) {
 	    	break;
 	    }
@@ -82,9 +80,7 @@ int main(int argc, char **argv) {
     pthread_create(&bwc_thread, NULL, bwc_connect, (void *)bwc_port);  
     pthread_create(&bwss_thread, NULL, bwss_connect, (void *)bwss_server);
     pthread_join(bwc_thread, NULL);
-    fprintf(stderr, "POST 1 JOIN\n");
     pthread_join(bwss_thread, NULL);
-    fprintf(stderr, "JOINS\n");
     return 0;
 }
 
@@ -96,12 +92,11 @@ void *bwss_connect(void *ptr) {
        	exit(1);
 	}
 
-	fprintf(stderr, "AQUI\n");
 	for(bytes=0;; bytes+=cnt) {
 		//cnt = DreadUDP(bwss_socket, bwc_buffer, BUFFER_LENGTH);
 		int size = BUFFER_LENGTH;
 		int pos = 0;
-        while(size > 0) {
+        //while(size > 0) {
 	        cnt = read(bwss_socket, bwc_buffer+pos, size);
 	    	fprintf(stderr, "DreadUDP: %d bytes\n", cnt);
 		    if(cnt <= 0) {
@@ -110,7 +105,7 @@ void *bwss_connect(void *ptr) {
 			Dwrite(bwc_socket+pos, bwc_buffer, cnt);
 		    size -= cnt;
 		    pos += cnt;
-	    }
+	    //}
 	    if(cnt <= 0) break;
 	    //Dwrite(bwc_socket+pos, bwc_buffer, cnt);
     }
@@ -126,7 +121,19 @@ void *bwss_connect(void *ptr) {
 }
 
 void *bwc_connect(void* ptr) {
-	Dbind(connect_client, (char *)ptr);
+	int s, s2;
+    int *p;
+
+    s = j_socket_tcp_bind((char *) ptr);
+    if(s < 0) {
+	fprintf(stderr, "bind failed\n");
+	exit(1);
+    }
+
+	s2 = j_accept(s);
+	p = (int *)malloc(sizeof(int));
+	*p = s2;
+	connect_client((void *)p);
 	return NULL;
 }
 
@@ -136,7 +143,6 @@ void* connect_client(void *pcl){
 	bwc_socket = *((int *)pcl);
 
     free(pcl);
-    fprintf(stderr, "ENTRE\n");
 	for(bytes=0;; bytes+=cnt) {
 		if(first) {
 			DwriteUDP(bwss_socket, bwss_buffer, 0);

@@ -1,0 +1,79 @@
+-Como compilar:
+
+	gcc -c -Wall jsocket6.4.c -o jsocket6.4.o
+	gcc -c -Wall Data-tcp.c -o Data-tcp.o
+	gcc -O3 -std=c99 bwcs.c -lm -o bwcs -lpthread
+	Luego de ejecutar estas instrucciones ejecutar Makefile con "make" en la consola.
+
+-Ejecutar las siguientes instrucciones en este orden para las pruebas en terminales separadas:
+
+	./bws
+
+	./bwss localhost 2000 2000
+
+	./bwcs localhost
+
+	./bwc filename1 filename2 localhost 2001
+
+Resultados:
+-Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
+-0ms delay y 0% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00203705 seconds at 744.528 Mbps
+		read 198789 bytes in 0.00290799 seconds at 521.542 Mbps
+		throughput total: 397578 bytes in 0.00839591 seconds at 361.281 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 198789 bytes in 31.3809 seconds at 0.0483301 Mbps, 142 packs
+		write 198789 bytes in 0.00125313 seconds at 1210.28 Mbps, 141 packs
+
+-100ms delay y 0% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00198007 seconds at 765.954 Mbps
+		read 198789 bytes in 0.202993 seconds at 7.47139 Mbps
+		throughput total: 397578 bytes in 1.8043 seconds at 1.68114 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 198789 bytes in 14.7658 seconds at 0.102713 Mbps, 142 packs
+		write 198789 bytes in 0.00197506 seconds at 767.896 Mbps, 141 packs
+
+-200ms delay y 0% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00266099 seconds at 569.953 Mbps
+		read 198789 bytes in 0.401866 seconds at 3.77399 Mbps
+		throughput total: 397578 bytes in 3.60317 seconds at 0.841836 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 198789 bytes in 20.9807 seconds at 0.0722875 Mbps, 142 packs
+		write 198789 bytes in 0.00128198 seconds at 1183.05 Mbps, 141 packs
+
+-0ms delay y 10% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00216007 seconds at 702.125 Mbps
+		read 149800 bytes in 0.019536 seconds at 58.5013 Mbps
+		throughput total: 299600 bytes in 2.23682 seconds at 1.02188 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 167989 bytes in 8.47236 seconds at 0.151275 Mbps, 120 packs
+		write 167989 bytes in 0.000751019 seconds at 1706.55 Mbps, 119 packs
+
+-100ms delay y 10% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00134993 seconds at 1123.5 Mbps
+		read 163789 bytes in 0.201602 seconds at 6.19841 Mbps
+		throughput total: 327578 bytes in 2.61386 seconds at 0.956141 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 183389 bytes in 13.1813 seconds at 0.106146 Mbps, 131 packs
+		write 183389 bytes in 0.00106001 seconds at 1319.94 Mbps, 130 packs
+
+-200ms delay y 10% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00244188 seconds at 621.094 Mbps
+		read 156789 bytes in 1.60852 seconds at 0.743668 Mbps
+		throughput total: 313578 bytes in 7.66368 seconds at 0.312175 Mbps
+
+
+	-Terminal SERVIDOR (bws): 
+		read 173589 bytes in 13.7154 seconds at 0.0965612 Mbps, 124 packs
+		write 173589 bytes in 0.00220299 seconds at 601.174 Mbps, 123 packs
