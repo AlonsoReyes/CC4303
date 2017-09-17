@@ -1,10 +1,6 @@
-
 INTEGRANTES:
-
 - Alexandra Ibarra.
 - Alonso Reyes.
-
-COMPILACION:
 
 -Como compilar:
 
@@ -23,16 +19,13 @@ COMPILACION:
 
 	./bwc filename1 filename2 localhost 2001
 
-Es importante notar que en el caso de bwcs es optativo el uso de parámetros pues estos se definen por default pero, 
-en caso de querer cambiar alguno de estos es necesario ingresarlos en el siguiente orden:
+Es importante notar que en el caso de bwcs es optativo el uso de parámetros pues estos se definen por default pero, en caso de querer cambiar alguno de estos es necesario ingresarlos en el siguiente orden:
 	
 	./bwcs bwss-server bwss-port bwc-port
 
-RESULTADOS:
+Resultados:
 
-***************************************************************************************************************
-Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
-***************************************************************************************************************
+**Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
 -0ms delay y 0% perdida:
 	-Terminal CLIENTE (bwc): 
 		write 198789 bytes in 0.00203705 seconds at 744.528 Mbps
@@ -94,9 +87,7 @@ Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
 		read 173589 bytes in 13.7154 seconds at 0.0965612 Mbps, 124 packs
 		write 173589 bytes in 0.00220299 seconds at 601.174 Mbps, 123 packs
 
-***************************************************************************************************************
-Enviando texto adjunto "prueba.txt" que pesa 51.4 kB.
-***************************************************************************************************************
+** Enviando texto adjunto "prueba.txt" que pesa 51.4 kB.
 -0ms delay y 0% perdida:
 	-Terminal CLIENTE (bwc): 
 		write 51437 bytes in 0.000191927 seconds at 2044.7 Mbps
