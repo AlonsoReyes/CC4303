@@ -57,8 +57,6 @@ int getNumSeq(char *buf) {
     for(i=DSEQ; i < DHDR; i++)
         res = (res*10)+(buf[i]-'0');
 
-// fprintf(stderr, "to_int %d <- %c, %c, %c, %c, %c\n", res, buf[0], buf[1], buf[2], buf[3], buf[4]);
-
     return res;
 }
 
@@ -128,6 +126,7 @@ int main(int argc, char **argv) {
 void *bwss_connect(void *ptr) {
 	int bytes, cnt;
 	int receivedSeqNum;
+	int lastReceivedSeqNum = -1;
 
 
 	/* conexion del socket UDP al puerto de BWSS */
@@ -141,51 +140,32 @@ void *bwss_connect(void *ptr) {
 		int size = BUFFER_LENGTH + DHDR; // largo maximo a leer
 	    cnt = read(bwss_socket, bwc_buffer, size); // lectura del socket UDP al buffer correspondiente al cliente
 
-		//fprintf(stderr, "received array with header\n");
-        //fprintf(stderr, "%s\n", bwc_buffer);
-
 	    receivedSeqNum = getNumSeq(bwc_buffer);
 
-	    //fprintf(stderr, "bit and seq -> %c, %c, %c, %c, %c, %c\n", bwc_buffer[0], bwc_buffer[1], bwc_buffer[2], bwc_buffer[3], bwc_buffer[4], bwc_buffer[5]);
 	    if(bwc_buffer[0] == 'A') {
 	    	if(receivedSeqNum == ack_bit) {
-		    	//fprintf(stderr, "%s\n", "got the ack");
 		    	received_ack = 1;
 		    	continue;
 		    }
 	    } else if(bwc_buffer[0] == 'D') {
-	    	//fprintf(stderr, "DATA received seq num\n");
-	        //fprintf(stderr, "%d\n", receivedSeqNum); 
 	    	memset(final_bwssbuff, 0, BUFFER_LENGTH + DHDR);
 	    	final_bwssbuff[0] = 'A';
 	    	addNumSeq(receivedSeqNum, final_bwssbuff);
-	    	//fprintf(stderr, "%s\n", "sent ack buffer");
-	    	//fprintf(stderr, "%s\n", final_bwssbuff);
 
 	    	//mando antes a tcp
 	    	if(cnt - DHDR <= 0) { // identifica EOF de bwss
 		  		break;
 			}
-			copyArray(DHDR, 0, cnt - DHDR, bwc_buffer, final_bwcbuff);	
-			//fprintf(stderr, "escribo en bwc_socket tcp\n");
-			Dwrite(bwc_socket, final_bwcbuff, cnt - DHDR); // escritura al socket TCP del cliente
-		    //fprintf(stderr, "termino de escribir en socket tcp\n");
-
-	    	DwriteUDP(bwss_socket, final_bwssbuff, DHDR);    
+			DwriteUDP(bwss_socket, final_bwssbuff, DHDR); 
+			if(lastReceivedSeqNum != receivedSeqNum) {
+				copyArray(DHDR, 0, cnt - DHDR, bwc_buffer, final_bwcbuff);
+				Dwrite(bwc_socket, final_bwcbuff, cnt - DHDR); // escritura al socket TCP del cliente 
+			}
+	    	lastReceivedSeqNum  = receivedSeqNum;
  	  	}
 	    
 	    fprintf(stderr, "ReadUDP: %d bytes\n", cnt);
 		
-		/*
-		if(cnt <= 0) { // identifica EOF de bwss
-		  	break;
-		}
-
-
-	    fprintf(stderr, "escribo en bwc_socket tcp\n");
-		Dwrite(bwc_socket, final_bwcbuff, cnt - DHDR); // escritura al socket TCP del cliente
-	    fprintf(stderr, "termino de escribir en socket tcp\n");
-	    */
     }
     DwriteUDP(bwss_socket, final_bwssbuff, DHDR);
 	copyArray(DHDR, 0, cnt - DHDR, bwc_buffer, final_bwcbuff);	
@@ -226,7 +206,7 @@ void *bwc_connect(void* ptr) {
 /*  Funcion encargada de realizar el proceso de lectura y escritura del paquete de retorno desde bwc a bwss  */
 void* connect_client(void *pcl){
 	int bytes, cnt;
-	clock_t t;
+	clock_t t, tEnd;
 	bwc_socket = *((int *)pcl);
     free(pcl);
 
@@ -241,19 +221,16 @@ void* connect_client(void *pcl){
         final_bwssbuff[DTYPE] = 'D';
         addNumSeq(frame_seq, final_bwssbuff);
         copyArray(0, DHDR, BUFFER_LENGTH + DHDR, bwss_buffer, final_bwssbuff);
-        //fprintf(stderr, "copied array with header\n");
-        //fprintf(stderr, "%s\n", final_bwssbuff);
        
         ack_bit = frame_seq;
         frame_seq = (frame_seq + 1) % MAX_SEQ;
 
         DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); // escritura del buffer de bwss al socket UDP
         // AGREGAR TIMEOUT Y HACER QUE ESPERE
-        t = 0;
         do {
-        	while(!received_ack || (((double)t / CLOCKS_PER_SEC) < timeout)) {
-        	t = clock() - t;
-        	}
+        	t = clock();
+        	while(!received_ack && (((double)(tEnd = clock() - t) / CLOCKS_PER_SEC) < timeout));
+
         	if(!received_ack) {
         		DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); 
         	}
@@ -261,9 +238,18 @@ void* connect_client(void *pcl){
 
         received_ack = 0;
 	}
+	ack_bit = frame_seq;
 	final_bwssbuff[DTYPE] = 'D';
     addNumSeq(frame_seq, final_bwssbuff);
 	DwriteUDP(bwss_socket, final_bwssbuff, DHDR); // escritura de EOF al socket UDP
+	do {
+    	t = clock();
+    	while(!received_ack && (((double)(tEnd = clock() - t) / CLOCKS_PER_SEC) < timeout));
+
+    	if(!received_ack) {
+    		DwriteUDP(bwss_socket, final_bwssbuff, DHDR); 
+    	}
+    } while(!received_ack);
 
 	pthread_mutex_lock(&mutex);
 	while(!ready) // Espera a que haya terminado proceso de retorno de los datos desde bws para finalizar
