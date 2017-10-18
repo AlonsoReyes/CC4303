@@ -1,0 +1,156 @@
+
+INTEGRANTES:
+
+- Alexandra Ibarra.
+- Alonso Reyes.
+
+COMPILACION:
+
+-Como compilar:
+
+	gcc -c -Wall jsocket6.4.c -o jsocket6.4.o
+	gcc -c -Wall Data-tcp.c -o Data-tcp.o
+
+	Luego de ejecutar estas instrucciones ejecutar Makefile con "make" en la consola.
+
+-Ejecutar las siguientes instrucciones en este orden para las pruebas en terminales separadas:
+
+	./bws
+
+	./bwss localhost 2000 2000
+
+	./bwcs
+
+	./bwc filename1 filename2 localhost 2001
+
+Es importante notar que en el caso de bwcs es optativo el uso de parámetros pues estos se definen por default pero, 
+en caso de querer cambiar alguno de estos es necesario ingresarlos en el siguiente orden:
+	
+	./bwcs bwss-server bwss-port bwc-port
+
+RESULTADOS:
+
+***************************************************************************************************************
+Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
+Usando -L en bwss.
+***************************************************************************************************************
+
+
+-0% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.00057292 seconds at 2647.21 Mbps
+		read 198789 bytes in 0.00482202 seconds at 314.524 Mbps
+
+		throughput total: 397578 bytes in 0.014544 seconds at 208.559 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 198789 bytes in 2.87974 seconds at 0.526659 Mbps, 142 packs
+		write 198789 bytes in 0.000794888 seconds at 1907.99 Mbps, 141 packs
+
+-10% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.000596046 seconds at 2544.5 Mbps
+		read 198789 bytes in 8.20731 seconds at 0.184791 Mbps
+
+		throughput total: 397578 bytes in 15.2648 seconds at 0.19871 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 198789 bytes in 9.82381 seconds at 0.154384 Mbps, 142 packs
+		write 198789 bytes in 0.0006001 seconds at 2527.31 Mbps, 141 packs
+
+-30% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 198789 bytes in 0.000624895 seconds at 2427.03 Mbps
+		read 198789 bytes in 30.3481 seconds at 0.0499748 Mbps
+
+		throughput total: 397578 bytes in 59.4103 seconds at 0.0510564 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 198789 bytes in 44.9541 seconds at 0.0337375 Mbps, 142 packs
+		write 198789 bytes in 0.000547886 seconds at 2768.17 Mbps, 141 packs
+
+
+***************************************************************************************************************
+Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
+Usando comando tc qdisc add dev lo root netem loss %.
+***************************************************************************************************************
+
+
+-0% perdida:
+	-Terminal CLIENTE (bwc): 
+
+	-Terminal SERVIDOR (bws): 
+
+-10% perdida:
+	-Terminal CLIENTE (bwc): 
+
+	-Terminal SERVIDOR (bws): 
+
+-30% perdida:
+	-Terminal CLIENTE (bwc): 
+
+	-Terminal SERVIDOR (bws): 
+
+***************************************************************************************************************
+Enviando texto adjunto "prueba.txt" que pesa 51.4 kB.
+Usando -L en bwss.
+***************************************************************************************************************
+
+
+-0% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 51437 bytes in 0.0200901 seconds at 19.5337 Mbps
+		read 51437 bytes in 0.00131297 seconds at 298.889 Mbps
+
+		throughput total: 102874 bytes in 0.070595 seconds at 11.1179 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 51437 bytes in 3.53764 seconds at 0.110931 Mbps, 37 packs
+		write 51437 bytes in 0.000477076 seconds at 822.581 Mbps, 36 packs
+
+-10% perdida:
+	-Terminal CLIENTE (bwc): 
+
+		write 51437 bytes in 0.000337839 seconds at 1161.6 Mbps
+		read 51437 bytes in 0.001755 seconds at 223.609 Mbps
+
+		throughput total: 102874 bytes in 3.00469 seconds at 0.261214 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 51437 bytes in 11.7917 seconds at 0.0332804 Mbps, 37 packs
+		write 51437 bytes in 0.000288963 seconds at 1358.07 Mbps, 36 packs
+
+-30% perdida:
+	-Terminal CLIENTE (bwc): 
+		write 51437 bytes in 0.000257015 seconds at 1526.89 Mbps
+		read 51437 bytes in 9.50471 seconds at 0.0412883 Mbps
+
+		throughput total: 102874 bytes in 17.5068 seconds at 0.044832 Mbps
+
+	-Terminal SERVIDOR (bws): 
+		read 51437 bytes in 11.8319 seconds at 0.0331674 Mbps, 37 packs
+		write 51437 bytes in 0.000333071 seconds at 1178.23 Mbps, 36 packs
+
+
+***************************************************************************************************************
+Enviando texto adjunto "prueba.txt" que pesa 51.4 kB.
+Usando comando tc qdisc add dev lo root netem loss %.
+***************************************************************************************************************
+
+
+-0% perdida:
+	-Terminal CLIENTE (bwc): 
+
+	-Terminal SERVIDOR (bws): 
+
+-10% perdida:
+	-Terminal CLIENTE (bwc): 
+
+	-Terminal SERVIDOR (bws): 
+
+-30% perdida:
+	-Terminal CLIENTE (bwc): 
+
+	-Terminal SERVIDOR (bws): 
+
+
