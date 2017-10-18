@@ -104,11 +104,10 @@ Usando comando tc qdisc add dev lo root netem loss %.
 
 -30% perdida:
 	-Terminal CLIENTE (bwc):
-		write 198789 bytes in 0.00164914 seconds at 919.654 Mbps
-		read 198789 bytes in 93.2041 seconds at 0.0162722 Mbps
-
-		throughput total: 397578 bytes in 360.408 seconds at 0.00841624 Mbps
-
+		write 198789 bytes in 0.000255108 seconds at 5945.09 Mbps
+		read 198789 bytes in 180.509 seconds at 0.00840204 Mbps
+	
+		throughput total: 397578 bytes in 344.977 seconds at 0.00879271 Mbps 
 
 	-Terminal SERVIDOR (bws): 
 		read 198789 bytes in 231.365 seconds at 0.00655519 Mbps, 142 packs
