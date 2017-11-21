@@ -10,9 +10,10 @@
 #include "Data.h"
 #include <pthread.h>
 #include <time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/select.h>
+
+
+char package_window[WIN_SZ][BUFFER_LENGTH + DHDR];
+int cntArray[WIN_SZ];
 
 char bwc_buffer[BUFFER_LENGTH + DHDR]; // buffer entre bwss y bwcs (UDP)
 char bwss_buffer[BUFFER_LENGTH]; // buffer entre bwc y bwcs (TCP)
@@ -30,9 +31,16 @@ int bwss_socket;
 int ready; // indicara cuando se habra terminado la escritura hacia bwc (retorno del mensaje) para soltar el socket
 
 int ack_bit; // Indica el numero de secuencia del ACK que se espera
-int frame_seq; // Indica el numero de secuencia del paquete que 
+int frame_seq; // Indica el numero de secuencia del paquete que sigue
+int last_sent; // Indica el numero de secuencia del último paquete enviado de la ventana
+int free_space;
 int timeout; // Es el timeout que se utilizara
 int received_ack; // Indica si se recibe el ACK;
+
+int LAR; // last ack received
+int windEnd; // indica el ultimo paquete que se debe enviar de la ventana de emision
+int duplicated; // indica cantidad de acks duplicados
+int recentlyReceived; // ack recientemente recibido
 
 pthread_mutex_t mutex;
 pthread_cond_t cond;
@@ -109,8 +117,12 @@ int main(int argc, char **argv) {
 
     ack_bit = 0; // Indica numero de secuencia del ACK enviado. Parte en el 0
     frame_seq = 0; // Indica numero de secuencia del paquete enviado. Parte en el 0
+    last_sent = 0;
+    windEnd = 0;
     timeout = 1; // Indica tiempo de espera por un paquete. 1 segundo
     received_ack = 0; // Indica si se recibio el ack del paquete enviado.
+    duplicated = 0;
+    LAR = -1;
 
     ready = 0; // var. ready: Aun no se ha completado proceso de escritura a bwc
     pthread_mutex_init(&mutex,NULL); // inicializacion mutex
@@ -131,7 +143,7 @@ int main(int argc, char **argv) {
 void *bwss_connect(void *ptr) {
 	int bytes, cnt;
 	int receivedSeqNum;
-	int lastReceivedSeqNum = -1; // permite descartar archivos duplicados
+	int lastReceivedSeqNum = 0; // permite descartar archivos duplicados
 
 
 	/* conexion del socket UDP al puerto de BWSS */
@@ -148,9 +160,14 @@ void *bwss_connect(void *ptr) {
 	    receivedSeqNum = getNumSeq(bwc_buffer);
 
 	    if(bwc_buffer[0] == 'A') {
-	    	if(receivedSeqNum == ack_bit) {
+	    	recentlyReceived = receivedSeqNum;
+	    	if(receivedSeqNum >= ack_bit) {
+	    		ack_bit = recentlyReceived + 1;
+	    		//LAR = recentlyReceived;
 		    	received_ack = 1;
 		    	continue;
+		    } else if(receivedSeqNum == LAR) {
+		    	duplicated++;
 		    }
 	    } else if(bwc_buffer[0] == 'D') {
 	    	memset(final_bwssbuff, 0, BUFFER_LENGTH + DHDR);
@@ -161,12 +178,14 @@ void *bwss_connect(void *ptr) {
 	    	if(cnt - DHDR <= 0) { // identifica EOF de bwss
 		  		break;
 			}
-			DwriteUDP(bwss_socket, final_bwssbuff, DHDR); 
-			if(lastReceivedSeqNum != receivedSeqNum) { // Evita escribir a bwc paquetes repetidos
+			 
+			if(lastReceivedSeqNum == receivedSeqNum) { // Evita escribir a bwc paquetes repetidos
+				DwriteUDP(bwss_socket, final_bwssbuff, DHDR);
 				copyArray(DHDR, 0, cnt - DHDR, bwc_buffer, final_bwcbuff);
 				Dwrite(bwc_socket, final_bwcbuff, cnt - DHDR); // escritura al socket TCP del cliente 
+				lastReceivedSeqNum = (lastReceivedSeqNum + 1) % WIN_SZ;
 			}
-	    	lastReceivedSeqNum  = receivedSeqNum;
+	    	//lastReceivedSeqNum  = receivedSeqNum;
  	  	}
 	    
 	    fprintf(stderr, "ReadUDP: %d bytes\n", cnt);
@@ -208,56 +227,114 @@ void *bwc_connect(void* ptr) {
 	return NULL;
 }
 
+int sendPartialWindows(int *pck, int *indexWindows){
+	int cnt;
+	windEnd = 0;
+	printf("%s\n", "Send Partial");
+	printf("Package: %d\n", *pck);
+	while(*pck < WIN_SZ) {
+		cnt = Dread(bwc_socket, bwss_buffer, BUFFER_LENGTH); // lectura del socket bwc al buffer de bwss
+	    if(cnt <= 0) break; // condicion de quiebre. Lectura de EOF
+
+	    // DEBO MODIFICAR BUFFER PARA CONTENER HEADER
+	    final_bwssbuff[DTYPE] = 'D';
+	    addNumSeq(frame_seq, final_bwssbuff);
+	    copyArray(0, DHDR, BUFFER_LENGTH + DHDR, bwss_buffer, final_bwssbuff);
+
+	    printf("Enviando paquete: %d\n",  frame_seq);
+	    frame_seq = (frame_seq + 1) % MAX_SEQ; // Proximo numero de secuencia a enviar
+
+		strcpy(package_window[*indexWindows%WIN_SZ], final_bwssbuff); // guardo paquete en la ventana de emision
+		cntArray[*indexWindows%WIN_SZ] = cnt;
+	    (*pck)++;
+	    (*indexWindows)++;
+
+	    windEnd++;
+
+	    // Mandamos el paquete de la ventana
+	    DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); // escritura del buffer de bwss al socket UDP
+	}
+	windEnd = (windEnd + 1)%WIN_SZ;
+	return cnt;
+}
+
+void sendFullWindows(int winSZ){
+	for(int i = 0; i < winSZ; i++){
+		DwriteUDP(bwss_socket,package_window[i],cntArray[i] + DHDR);
+	}
+}
+
 /*  Funcion encargada de realizar el proceso de lectura y escritura del paquete de retorno desde bwc a bwss  */
 void* connect_client(void *pcl){
-	int bytes, cnt;
+	int cnt, pck, indexWindows;
 	clock_t t, tEnd;
 	bwc_socket = *((int *)pcl);
     free(pcl);
 
 	DwriteUDP(bwss_socket, bwss_buffer, 0); // mensaje enviado para "confirmar" conexion con bwss
 	
+	pck = 0;
+	indexWindows = 0;
+
 	/* Proceso de lectura y escritura desde bwc a bwss */
-	for(bytes=0;; bytes+=cnt) {
-        cnt = Dread(bwc_socket, bwss_buffer, BUFFER_LENGTH); // lectura del socket bwc al buffer de bwss
-        if(cnt <= 0) break; // condicion de quiebre. Lectura de EOF
+	for(;;) {
+		cnt = sendPartialWindows(&pck, &indexWindows);
+		if(cnt == 0) break;
+		// AGREGAR TIMEOUT Y HACER QUE ESPERE
+		do {
+		// VERIFICA SI ACK M == LAR => DUP += 1 => SI DUP == 3 => ENVIAR VENTANA COMPLETA
+			t = clock();
+			printf("%s\n", "DOOO" );
+			while(!received_ack && (((double)(tEnd = clock() - t) / CLOCKS_PER_SEC) < timeout) && !(duplicated>=3));
+			printf("DUPLICADOS ANTES: %d\n", duplicated);
+			if(!received_ack || duplicated>=3) {
+				fprintf(stderr, "REENVIANDO VENTANA: \n");
+				sendFullWindows(windEnd);
+				if(duplicated >= 3) {
+					duplicated = 0;
+					received_ack = 0;
+				}
+				//DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); 
+			}
+		} while(!received_ack);
+		printf("%s\n", "Salimos");
 
-        // DEBO MODIFICAR BUFFER PARA CONTENER HEADER
-        final_bwssbuff[DTYPE] = 'D';
-        addNumSeq(frame_seq, final_bwssbuff);
-        copyArray(0, DHDR, BUFFER_LENGTH + DHDR, bwss_buffer, final_bwssbuff);
-       
-        ack_bit = frame_seq; // ACK que espera como confirmacion 
-        frame_seq = (frame_seq + 1) % MAX_SEQ; // Proximo numero de secuencia a enviar
-
-        DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); // escritura del buffer de bwss al socket UDP
-        
-        // AGREGAR TIMEOUT Y HACER QUE ESPERE
-        do {
-        	t = clock();
-        	while(!received_ack && (((double)(tEnd = clock() - t) / CLOCKS_PER_SEC) < timeout));
-
-        	if(!received_ack) {
-        		fprintf(stderr, "REENVIANDO: ");
-        		DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); 
-        	}
-        } while(!received_ack);
-
+        // RECIBI EL ACK M -> TENGO VENTANA - M ESPACIOS LIBRES
+        if(LAR > recentlyReceived) {
+        	pck -= (MAX_SEQ - LAR + recentlyReceived +1);
+        } else {
+        	pck -= (recentlyReceived - LAR);
+        }
+        //indexWindows++;
+        LAR = recentlyReceived;
+        duplicated = 0;
         received_ack = 0;
 	}
-	ack_bit = frame_seq; // ack del eof
+	//ack_bit = frame_seq; // ack del eof
 	final_bwssbuff[DTYPE] = 'D';
     addNumSeq(frame_seq, final_bwssbuff);
-	DwriteUDP(bwss_socket, final_bwssbuff, DHDR); // escritura de EOF al socket UDP
-	do { // chequea que se recibio ack del eof por parte del bwss
-    	t = clock();
-    	while(!received_ack && (((double)(tEnd = clock() - t) / CLOCKS_PER_SEC) < timeout));
+    copyArray(0, DHDR, BUFFER_LENGTH + DHDR, bwss_buffer, final_bwssbuff);
 
-    	if(!received_ack) {
-    		fprintf(stderr, "REENVIANDO: ");
-    		DwriteUDP(bwss_socket, final_bwssbuff, DHDR); 
-    	}
-    } while(!received_ack);
+	strcpy(package_window[indexWindows%WIN_SZ], final_bwssbuff); // guardo paquete en la ventana de emision
+	cntArray[indexWindows%WIN_SZ] = cnt;
+
+    // Mandamos el paquete de la ventana
+    DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR);
+
+	do {
+	// VERIFICA SI ACK M == LAR => DUP += 1 => SI DUP == 3 => ENVIAR VENTANA COMPLETA
+		t = clock();
+		while(!received_ack && (((double)(tEnd = clock() - t) / CLOCKS_PER_SEC) < timeout) && !(duplicated>=3));
+
+		if(!received_ack || duplicated>=3) {
+			fprintf(stderr, "REENVIANDO VENTANA: \n");
+			sendFullWindows(windEnd);
+			if(duplicated >= 3) {
+				duplicated = 0;
+				received_ack = 0;
+			}
+		}
+	} while(!received_ack && !(LAR == frame_seq));
 
 	pthread_mutex_lock(&mutex);
 	while(!ready) // Espera a que haya terminado proceso de retorno de los datos desde bws para finalizar

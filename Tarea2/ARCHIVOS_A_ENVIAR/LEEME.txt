@@ -4,6 +4,9 @@ INTEGRANTES:
 - Alexandra Ibarra.
 - Alonso Reyes.
 
+**IMPORTATE: Las pruebas con pérdida, sobretodo con 30%, pueden demorar bastante. Pareciera que se
+queda pegado, pero eventualmente seguirá.
+
 COMPILACION:
 
 -Como compilar:
