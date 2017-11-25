@@ -8,7 +8,7 @@
 #define DHDR  6
 
 #define MAX_SEQ 100000
-#define WIN_SZ  100 /* Max=49000 */
+#define WIN_SZ  1000 /* Max=49000 */
 #define RETRIES 11
 #define TIMEOUT 1
 

@@ -39,6 +39,7 @@ char final_bwcbuff[BUFFER_LENGTH]; // buffer entre bwcs y bwc (TCP)
 int ready; // indicara cuando se habra terminado la escritura hacia bwc (retorno del mensaje) para soltar el socket
 int timeout; // Es el timeout que se utilizara
 int received_ack; // Indica si se recibe un ACK;
+int timeout_done;
 
 int expected_seq_num; // Indica el numero de secuencia del ACK que se espera
 int next_seq_num; // Indica el numero de secuencia del paquete que sigue
@@ -139,6 +140,7 @@ int main(int argc, char **argv) {
     first_package_pos = 0;
     first_package_sqnum = 0;
     timeout = 1; // Indica tiempo de espera por un paquete. 1 segundo
+    timeout_done = 0; // Indica si se cumple el timeout 
     received_ack = 0; // Indica si se recibio el ack del paquete enviado.
     duplicated = 0;
     last_ack_received = -1;
@@ -186,22 +188,23 @@ void *bwss_connect(void *ptr) {
 	    	printf("received_seq_num: %d - expected_seq_num: %d\n", received_seq_num, expected_seq_num);
 	   		
 	    	if(received_seq_num == expected_seq_num - 1) {
+	    		pthread_mutex_lock(&mutex);
 		    	if (fast_retransmit_enabled) {
-		    		pthread_mutex_lock(&mutex);
 		    		duplicated++;
-		    		pthread_mutex_unlock(&mutex);
 		    	}
+		    	pthread_mutex_unlock(&mutex);
 		    } else if(received_seq_num%MAX_SEQ >= expected_seq_num) {
 	    		expected_seq_num = (received_seq_num + 1)%MAX_SEQ;
 	    		pthread_mutex_lock(&mutex);
 	    		last_ack_received = received_seq_num;
 	    		//printf("LAR: %d\n", last_ack_received);
 		    	received_ack = 1;
+		    	timeout_done = 0;
 		    	pthread_mutex_unlock(&mutex);
 		    } 
 	    } else if(bwc_buffer[0] == 'D') {
 
-	    	printf("Data seq_num: %d - expected_seq_num: %d\n", received_seq_num, data_seq_num);
+	    	//printf("Data seq_num: %d - expected_seq_num: %d\n", received_seq_num, data_seq_num);
 	    	if (first) {
 	    		first = 0;
 	    		data_seq_num = 0;
@@ -227,8 +230,6 @@ void *bwss_connect(void *ptr) {
 				DwriteUDP(bwss_socket, final_bwssbuff, DHDR);
 			}
  	  	}
-	    
-	    //fprintf(stderr, "ReadUDP: %d bytes\n", cnt);
 		
     }
     addNumSeq(received_seq_num, final_bwssbuff);
@@ -270,11 +271,19 @@ void *bwc_connect(void* ptr) {
 int send_partial_window(int *pck, int *indexWindows){
 	int cnt;
 	cnt = -1;
-	printf("%s\n", "Send Partial");
+	//printf("%s\n", "Send Partial");
 	//printf("Package: %d\n", *pck);
 	//printf("first_package_pos: %d\n", first_package_pos);
-	while(*pck < WIN_SZ && !(fast_retransmit_enabled && duplicated >=3)) {
+	while(*pck < WIN_SZ) {
+		pthread_mutex_lock(&mutex);
+		if (fast_retransmit_enabled && duplicated >=3) {
+			pthread_mutex_unlock(&mutex);
+			break;
+		}
+		pthread_mutex_unlock(&mutex);
+		printf("%s\n", "BWC READ");
 		cnt = Dread(bwc_socket, bwss_buffer, BUFFER_LENGTH); // lectura del socket bwc al buffer de bwss
+		printf("%s\n", "BWC READ END!!");
 	    if(cnt <= 0) break; // condicion de quiebre. Lectura de EOF
 
 	    // DEBO MODIFICAR BUFFER PARA CONTENER HEADER
@@ -284,7 +293,7 @@ int send_partial_window(int *pck, int *indexWindows){
 
 	    last_frame_sent = next_seq_num;
 
-	    //printf("Enviando paquete: %d of type %c\n",  next_seq_num, final_bwssbuff[DTYPE]);
+	    printf("Sending package: %d of type %c\n",  next_seq_num, final_bwssbuff[DTYPE]);
 	    next_seq_num = (next_seq_num + 1) % MAX_SEQ; // Proximo numero de secuencia a enviar
 
 	    copyArray(0, 0, BUFFER_LENGTH + DHDR, final_bwssbuff, package_window[*indexWindows%WIN_SZ]);
@@ -298,7 +307,7 @@ int send_partial_window(int *pck, int *indexWindows){
 	    // Mandamos el paquete de la ventana
 	    DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); // escritura del buffer de bwss al socket UDP
 	}
-	fast_retransmit_enabled = 1;
+	//fast_retransmit_enabled = 1;
 	return cnt;
 }
 
@@ -310,7 +319,9 @@ void send_full_window(int winSZ){
 		//printf("Sending package: %d of type %c\n", get_seq_num(package_window[(first_package_pos+i)%WIN_SZ]), package_window[(first_package_pos+i)%WIN_SZ][DTYPE]);
 		DwriteUDP(bwss_socket,package_window[(first_package_pos+i)%WIN_SZ],cntArray[(first_package_pos+i)%WIN_SZ]);
 	}
+	printf("%s\n", "Send Full DONE");
 }
+
 
 /*  Funcion encargada de realizar el proceso de lectura y escritura del paquete de retorno desde bwc a bwss  */
 void* connect_client(void *pcl){
@@ -342,13 +353,17 @@ void* connect_client(void *pcl){
 			winSZ = last_frame_sent - first_package_sqnum + 1;
 			if (fast_retransmit_enabled && duplicated>=3) {
 				fprintf(stderr, "FAST RETRANSMIT DUP = %d\n", duplicated);
+				pthread_mutex_lock(&mutex);
 				duplicated = 0;
-				fast_retransmit_enabled = 0;
+				//fast_retransmit_enabled = 0;
+				pthread_mutex_unlock(&mutex);
 				send_full_window(winSZ);
 				// receive_ack = 0 ??
 			} else if((tEnd / CLOCKS_PER_SEC) >= timeout) {
 				fprintf(stderr, "DELAY RETRANSMIT \n");
+				pthread_mutex_lock(&mutex);
 				duplicated = 0;
+				pthread_mutex_unlock(&mutex);
 				send_full_window(winSZ);
 				//DwriteUDP(bwss_socket, final_bwssbuff, cnt + DHDR); 
 			}
@@ -406,7 +421,7 @@ void* connect_client(void *pcl){
 			if (fast_retransmit_enabled && duplicated>=3) {
 				fprintf(stderr, "FAST RETRANSMIT DUP = %d\n", duplicated);
 				duplicated = 0;
-				fast_retransmit_enabled = 0;
+				//fast_retransmit_enabled = 0;
 				send_full_window(winSZ);
 				// receive_ack = 0 ??
 			} else if((tEnd / CLOCKS_PER_SEC) >= timeout) {

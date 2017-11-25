@@ -31,179 +31,271 @@ en caso de querer cambiar alguno de estos es necesario ingresarlos en el siguien
 	
 	./bwcs bwss-server bwss-port bwc-port
 
-RESULTADOS:
+RESULTADOS: SE USO SIZE_WS = 1000
 
 ***************************************************************************************************************
-Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
+Enviando imagen adjunta "lestwins.mp3" que pesa 3.6 MB.
 Usando -L en bwss.
 ***************************************************************************************************************
 
 
 -0% perdida:
-	-Terminal CLIENTE (bwc): 
-		write 198789 bytes in 0.00057292 seconds at 2647.21 Mbps
-		read 198789 bytes in 0.00482202 seconds at 314.524 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 397578 bytes in 0.014544 seconds at 208.559 Mbps
+		-Terminal SERVIDOR (bws):
 
-	-Terminal SERVIDOR (bws): 
-		read 198789 bytes in 2.87974 seconds at 0.526659 Mbps, 142 packs
-		write 198789 bytes in 0.000794888 seconds at 1907.99 Mbps, 141 packs
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
 
--10% perdida:
-	-Terminal CLIENTE (bwc): 
-		write 198789 bytes in 0.000596046 seconds at 2544.5 Mbps
-		read 198789 bytes in 8.20731 seconds at 0.184791 Mbps
+		-Terminal SERVIDOR (bws):
 
-		throughput total: 397578 bytes in 15.2648 seconds at 0.19871 Mbps
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-	-Terminal SERVIDOR (bws): 
-		read 198789 bytes in 9.82381 seconds at 0.154384 Mbps, 142 packs
-		write 198789 bytes in 0.0006001 seconds at 2527.31 Mbps, 141 packs
-
--30% perdida:
-	-Terminal CLIENTE (bwc): 
-		write 198789 bytes in 0.000241995 seconds at 6267.24 Mbps
-		read 198789 bytes in 184.621 seconds at 0.00821489 Mbps
-
-		throughput total: 397578 bytes in 335.034 seconds at 0.00905366 Mbps
-
-	-Terminal SERVIDOR (bws): 
-		read 198789 bytes in 156.749 seconds at 0.00967561 Mbps, 142 packs
-		write 198789 bytes in 0.000279903 seconds at 5418.44 Mbps, 141 packs
-
-
-
-***************************************************************************************************************
-Enviando imagen adjunta "testimage.jpg" que pesa 198.8 kB.
-Usando comando tc qdisc add dev lo root netem loss %.
-***************************************************************************************************************
-
-
--0% perdida:
-	-Terminal CLIENTE (bwc):
-		write 198789 bytes in 0.000638008 seconds at 2377.15 Mbps
-		read 198789 bytes in 0.00598097 seconds at 253.578 Mbps
-
-		throughput total: 397578 bytes in 0.0178089 seconds at 170.324 Mbps
-
-
-	-Terminal SERVIDOR (bws): 
-		read 198789 bytes in 4.80965 seconds at 0.315333 Mbps, 142 packs
-		write 198789 bytes in 0.000644922 seconds at 2351.66 Mbps, 141 packs
-
+		-Terminal SERVIDOR (bws):
 
 -10% perdida:
-	-Terminal CLIENTE (bwc):
-		write 198789 bytes in 0.000319958 seconds at 4740.13 Mbps
-		read 198789 bytes in 40.1102 seconds at 0.0378119 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-			throughput total: 397578 bytes in 77.134 seconds at 0.0393248 Mbps
- 
+		-Terminal SERVIDOR (bws):
 
-	-Terminal SERVIDOR (bws):
-		read 198789 bytes in 42.8445 seconds at 0.0353987 Mbps, 142 packs
-		write 198789 bytes in 0.000313044 seconds at 4844.82 Mbps, 141 packs
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
 
 -30% perdida:
-	-Terminal CLIENTE (bwc):
-		write 198789 bytes in 0.00164914 seconds at 919.654 Mbps
-		read 198789 bytes in 93.2041 seconds at 0.0162722 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 397578 bytes in 360.408 seconds at 0.00841624 Mbps
+		-Terminal SERVIDOR (bws):
 
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-	-Terminal SERVIDOR (bws): 
-		read 198789 bytes in 231.365 seconds at 0.00655519 Mbps, 142 packs
-		write 198789 bytes in 0.000895977 seconds at 1692.72 Mbps, 141 packs
+		-Terminal SERVIDOR (bws):
 
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
 
 
 
 
 ***************************************************************************************************************
-Enviando texto adjunto "prueba.txt" que pesa 51.4 kB.
+Enviando texto adjunto "video.mp4" que pesa 1.7 MB.
 Usando -L en bwss.
 ***************************************************************************************************************
 
 
 -0% perdida:
-	-Terminal CLIENTE (bwc): 
-		write 51437 bytes in 0.0200901 seconds at 19.5337 Mbps
-		read 51437 bytes in 0.00131297 seconds at 298.889 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 102874 bytes in 0.070595 seconds at 11.1179 Mbps
+		-Terminal SERVIDOR (bws):
 
-	-Terminal SERVIDOR (bws): 
-		read 51437 bytes in 3.53764 seconds at 0.110931 Mbps, 37 packs
-		write 51437 bytes in 0.000477076 seconds at 822.581 Mbps, 36 packs
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
 
 -10% perdida:
-	-Terminal CLIENTE (bwc): 
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		write 51437 bytes in 0.000337839 seconds at 1161.6 Mbps
-		read 51437 bytes in 0.001755 seconds at 223.609 Mbps
+		-Terminal SERVIDOR (bws):
 
-		throughput total: 102874 bytes in 3.00469 seconds at 0.261214 Mbps
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-	-Terminal SERVIDOR (bws): 
-		read 51437 bytes in 11.7917 seconds at 0.0332804 Mbps, 37 packs
-		write 51437 bytes in 0.000288963 seconds at 1358.07 Mbps, 36 packs
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
 
 -30% perdida:
-	-Terminal CLIENTE (bwc): 
-		write 51437 bytes in 0.000257015 seconds at 1526.89 Mbps
-		read 51437 bytes in 9.50471 seconds at 0.0412883 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 102874 bytes in 17.5068 seconds at 0.044832 Mbps
+		-Terminal SERVIDOR (bws):
 
-	-Terminal SERVIDOR (bws): 
-		read 51437 bytes in 11.8319 seconds at 0.0331674 Mbps, 37 packs
-		write 51437 bytes in 0.000333071 seconds at 1178.23 Mbps, 36 packs
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
+
+***************************************************************************************************************
+Enviando texto adjunto "pi.txt" que pesa 1.0 MB.
+Usando -L en bwss.
+***************************************************************************************************************
+
+
+-0% perdida:
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+-10% perdida:
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
+
+-30% perdida:
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
+
 
 
 ***************************************************************************************************************
-Enviando texto adjunto "prueba.txt" que pesa 51.4 kB.
+Enviando imagen adjunta "lestwins.mp3" que pesa 3.6 MB.
 Usando comando tc qdisc add dev lo root netem loss %.
 ***************************************************************************************************************
 
 
 -0% perdida:
-	-Terminal CLIENTE (bwc):
-		write 51437 bytes in 0.000176907 seconds at 2218.31 Mbps
-		read 51437 bytes in 0.00286984 seconds at 136.744 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 102874 bytes in 0.048106 seconds at 16.3154 Mbps
+		-Terminal SERVIDOR (bws):
 
-	-Terminal SERVIDOR (bws): 
-		read 51437 bytes in 3.24169 seconds at 0.121058 Mbps, 37 packs
-		write 51437 bytes in 0.000386 seconds at 1016.67 Mbps, 36 packs
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
 
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
 
 -10% perdida:
-	-Terminal CLIENTE (bwc): 
-		write 51437 bytes in 0.000268936 seconds at 1459.21 Mbps
-		read 51437 bytes in 2.78394 seconds at 0.140963 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 102874 bytes in 13.9972 seconds at 0.0560731 Mbps
+		-Terminal SERVIDOR (bws):
 
-	-Terminal SERVIDOR (bws): 
-		read 51437 bytes in 16.0515 seconds at 0.0244484 Mbps, 37 packs
-		write 51437 bytes in 0.000174046 seconds at 2254.77 Mbps, 36 packs
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
 
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
 
 -30% perdida:
-	-Terminal CLIENTE (bwc):
-		write 51437 bytes in 0.000522137 seconds at 751.591 Mbps
-		read 51437 bytes in 48.237 seconds at 0.00813552 Mbps
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-		throughput total: 102874 bytes in 77.4434 seconds at 0.0101347 Mbps
+		-Terminal SERVIDOR (bws):
 
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
 
-	-Terminal SERVIDOR (bws): 
-		read 51437 bytes in 50.4518 seconds at 0.00777837 Mbps, 37 packs
-		write 51437 bytes in 9.67979e-05 seconds at 4054.15 Mbps, 36 packs
-
+		-Terminal SERVIDOR (bws):
 
 
+***************************************************************************************************************
+Enviando texto adjunto "video.mp4" que pesa 1.7 MB.
+Usando comando tc qdisc add dev lo root netem loss %.
+***************************************************************************************************************
+
+
+-0% perdida:
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+-10% perdida:
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 500ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws): 
+
+-30% perdida:
+	* 0ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
+
+	* 100ms Delay:
+		-Terminal CLIENTE (bwc): 
+
+		-Terminal SERVIDOR (bws):
 
